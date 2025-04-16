@@ -61,29 +61,38 @@ app.get('/', async (req, res) => {
 })
 
 app.post('/', async (req, res) => {
-    let prompt = req.body.prompt
-    console.log("the user asked for " + prompt)
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
 
-    // conversationHistory.push(new HumanMessage(prompt))
+    const prompt = req.body.prompt;
+    console.log("the user asked for " + prompt);
 
-    const result = await returnInput(prompt)
-    res.json({ message: result })
+    await returnInput(prompt, res);
 })
 
-async function returnInput(prompt) {
+async function returnInput(prompt, res) {
     console.log("returnInput received prompt:", prompt);
     const character = await getLOTRInfo();
     console.log('Using character:', character);
 
-    // const messages = await promptTemplate.invoke({ question: prompt });
     conversationHistory.push(new HumanMessage(prompt));
     conversationHistory.push(new AIMessage(`mention a fun fact about ${character} everytime you give a response`));
 
-    const answer = await model.invoke(conversationHistory);
+    const stream = await model.stream(conversationHistory);
 
-    conversationHistory.push(new AIMessage(answer.content));
-    // console.log(conversationHistory)
-    return answer.content;
+    for await (const chunk of stream) {
+        const text = chunk?.content || '';
+        if (text) {
+            res.write(`data: ${text}\n\n`);
+        }
+    }
+
+    // Laat weten dat de stream klaar is
+    res.write(`data: [DONE]\n\n`);
+    res.end();
+
+    conversationHistory.push(new AIMessage(stream?.content || ''));
 }
 
 

@@ -1,0 +1,85 @@
+body {
+    background-image: url('images/Lotr-background.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    font-family: 'Georgia', serif;
+    color: #fff;
+    text-align: center;
+    padding-top: 50px;
+}
+
+h1 {
+    font-size: 2.5rem;
+    margin-bottom: 30px;
+    text-shadow: 2px 2px 5px #000;
+}
+
+form {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    flex-wrap: wrap; /* Responsive */
+    margin-bottom: 20px;
+}
+
+
+.input-wrapper {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+input[type="text"] {
+    padding: 10px;
+    font-size: 1.1rem;
+    border-radius: 10px;
+    border: none;
+    width: 300px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 1.1rem;
+    border-radius: 10px;
+    border: none;
+    background-color: #222;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #444;
+}
+
+#resultdiv {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    margin-top: 30px;
+    padding: 20px;
+    background-color: rgba(0,0,0,0.6);
+    border-radius: 10px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 1.2rem;
+}
+
+.orb-img {
+    width: 20rem;
+    height: auto;
+    max-width: 100%;
+    animation: floatOrb 3s ease-in-out infinite;
+}
+
+/* Keyframes for up-and-down floating */
+@keyframes floatOrb {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+    100% { transform: translateY(0); }
+}
