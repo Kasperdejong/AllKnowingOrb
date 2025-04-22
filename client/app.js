@@ -9,7 +9,11 @@ async function askQuestion(e) {
     e.preventDefault();
     const chatfield = document.getElementById("chatfield");
     const resultdiv = document.getElementById("resultdiv");
+    const formButton = document.getElementById("formButton");
+
     resultdiv.textContent = "";
+    formButton.disabled = true; // 🔒 Disable button
+    formButton.textContent = "You will now wait until i'm done speaking!"; // Optional loading text
 
     const options = {
         method: 'POST',
@@ -51,6 +55,8 @@ async function askQuestion(e) {
 
         buffer = "";
     }
+    formButton.disabled = false; // ✅ Re-enable button
+    formButton.textContent = "click me!"; // Reset button text
 }
 
 

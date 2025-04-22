@@ -77,7 +77,7 @@ async function returnInput(prompt, res) {
     console.log('Using character:', character);
 
     conversationHistory.push(new HumanMessage(prompt));
-    conversationHistory.push(new AIMessage(`mention a fun fact about ${character} everytime you give a response`));
+    conversationHistory.push(new AIMessage(`mention a fun fact about ${character} everytime you give a response, but remember to always respond to the users imput and prioritize that over the fun fact`));
 
     const stream = await model.stream(conversationHistory);
 
