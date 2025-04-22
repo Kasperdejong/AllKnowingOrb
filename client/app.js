@@ -1,8 +1,10 @@
-
 document.addEventListener("DOMContentLoaded", () => {
     const form = document.querySelector("form");
     const chatfield = document.getElementById("chatfield");
     const voiceButton = document.getElementById("voiceButton");
+
+    let speechHeard = false;
+    let recognition;
 
     form.addEventListener("submit", (e) => askQuestion(e));
 
@@ -12,31 +14,38 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        const recognition = new webkitSpeechRecognition(); // Chrome only
+        if (voiceButton.disabled) return;
+
+        recognition = new webkitSpeechRecognition();
         recognition.lang = 'en-US';
         recognition.interimResults = false;
         recognition.maxAlternatives = 1;
+
+        speechHeard = false;
 
         recognition.onstart = () => {
             voiceButton.textContent = "Listening...";
             voiceButton.disabled = true;
         };
 
-        recognition.onend = () => {
-            voiceButton.textContent = "🎤 Speak your question";
-            voiceButton.disabled = false;
+        recognition.onresult = (event) => {
+            speechHeard = true;
+            const transcript = event.results[0][0].transcript;
+            chatfield.value = transcript;
+            form.requestSubmit();
         };
 
         recognition.onerror = (event) => {
             console.error("Speech error", event.error);
-            voiceButton.textContent = "🎤 Speak your question";
-            voiceButton.disabled = false;
+            resetVoiceButton();
         };
 
-        recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript;
-            chatfield.value = transcript;
-            form.requestSubmit(); // Properly triggers the form submit
+        recognition.onend = () => {
+            if (!speechHeard) {
+                console.warn("No speech detected");
+                resetVoiceButton();
+            }
+            // If speech was heard, askQuestion will re-enable the button
         };
 
         recognition.start();
@@ -45,58 +54,67 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("Button event attached");
 });
 
+function resetVoiceButton() {
+    const voiceButton = document.getElementById("voiceButton");
+    voiceButton.textContent = "🎤 Speak your question";
+    voiceButton.disabled = false;
+}
+
 async function askQuestion(e) {
     e.preventDefault();
     const resultdiv = document.getElementById("resultdiv");
     const chatfield = document.getElementById("chatfield");
     const formButton = document.getElementById("formButton");
+    const voiceButton = document.getElementById("voiceButton");
 
     resultdiv.textContent = "";
-    formButton.disabled = true; // 🔒 Disable button
-    formButton.textContent = "You will now wait until i'm done speaking!"; // Optional loading text
+    formButton.disabled = true;
+    voiceButton.disabled = true;
+    formButton.textContent = "You will now wait until I'm done speaking!";
 
-    const options = {
-        method: 'POST',
-        mode: 'cors',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ prompt: chatfield.value })
-    };
+    try {
+        const response = await fetch("http://localhost:3000/", {
+            method: 'POST',
+            mode: 'cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: chatfield.value })
+        });
 
-    const response = await fetch("http://localhost:3000/", options);
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder("utf-8");
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder("utf-8");
 
-    let buffer = "";
-    const typingSpeed = 50;
+        let buffer = "";
+        const typingSpeed = 50;
 
-    while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
 
-        buffer += decoder.decode(value, { stream: true });
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split("\n\n");
 
-        const lines = buffer.split("\n\n");
+            for (let line of lines) {
+                if (line.startsWith("data: ")) {
+                    const text = line.replace("data: ", "");
 
-        for (let line of lines) {
-            if (line.startsWith("data: ")) {
-                const text = line.replace("data: ", "");
+                    if (text.includes("[DONE]")) continue;
 
-                // Skip the special "[DONE]" marker
-                if (text.includes("[DONE]")) continue;
-
-                for (let char of text) {
-                    resultdiv.textContent += char;
-                    await new Promise(r => setTimeout(r, typingSpeed));
+                    for (let char of text) {
+                        resultdiv.textContent += char;
+                        await new Promise(r => setTimeout(r, typingSpeed));
+                    }
                 }
             }
+
+            buffer = "";
         }
-
-        buffer = "";
+    } catch (error) {
+        console.error("Failed to fetch response:", error);
+        resultdiv.textContent = "Sorry, something went wrong.";
     }
-    formButton.disabled = false; // ✅ Re-enable button
-    formButton.textContent = "click me!"; // Reset button text
+
+    formButton.disabled = false;
+    formButton.textContent = "click me!";
+    voiceButton.disabled = false;
+    resetVoiceButton();
 }
-
-
