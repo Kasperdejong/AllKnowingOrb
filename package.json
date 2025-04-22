@@ -13,11 +13,13 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+    "@langchain/community": "^0.3.41",
     "@langchain/core": "^0.3.44",
     "@langchain/openai": "^0.5.5",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "langchain": "^0.3.21",
+    "langdetect": "^0.2.1",
     "react": "^19.1.0"
   },
   "devDependencies": {

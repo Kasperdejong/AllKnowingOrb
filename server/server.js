@@ -1,6 +1,7 @@
 import { AzureChatOpenAI } from "@langchain/openai";
 import {ChatPromptTemplate, PromptTemplate} from "@langchain/core/prompts";
 import {AIMessage, HumanMessage, SystemMessage} from "@langchain/core/messages";
+import { OpenAIWhisperAudio } from "@langchain/community/document_loaders/fs/openai_whisper_audio";
 import express from 'express'
 import cors from 'cors'
 
@@ -70,6 +71,31 @@ app.post('/', async (req, res) => {
 
     await returnInput(prompt, res);
 })
+
+app.post('/whisper', async (req, res) => {
+    try {
+        const filePath = "audio.mp3";
+
+        const loader = new OpenAIWhisperAudio(filePath, {
+            transcriptionCreateParams: { language: "en" },
+            clientOptions: {
+                apiKey: process.env.AZURE_OPENAI_API_KEY,
+                baseURL: `https://${process.env.AZURE_OPENAI_API_INSTANCE_NAME}.openai.azure.com/openai/deployments/deploy-whisper`,
+                defaultQuery: { 'api-version': process.env.AZURE_OPENAI_API_VERSION },
+                defaultHeaders: { 'api-key': process.env.AZURE_OPENAI_API_KEY },
+            },
+        });
+
+        const docs = await loader.load();
+        const text = docs[0].pageContent;
+
+        res.json({ transcription: text });
+    } catch (error) {
+        console.error("Whisper error:", error);
+        res.status(500).json({ error: "Failed to transcribe audio." });
+    }
+});
+
 
 async function returnInput(prompt, res) {
     console.log("returnInput received prompt:", prompt);

@@ -83,3 +83,16 @@ button:hover {
     50% { transform: translateY(-20px); }
     100% { transform: translateY(0); }
 }
+
+#voiceButton {
+    padding: 0.5rem 1rem;
+    background-color: #673ab7;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+#voiceButton:disabled {
+    background-color: #9c27b0;
+    cursor: wait;
+}

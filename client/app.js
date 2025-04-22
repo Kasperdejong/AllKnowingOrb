@@ -1,14 +1,54 @@
 
 document.addEventListener("DOMContentLoaded", () => {
-    const form = document.querySelector("form")
-    form.addEventListener("submit", (e) => askQuestion(e))
+    const form = document.querySelector("form");
+    const chatfield = document.getElementById("chatfield");
+    const voiceButton = document.getElementById("voiceButton");
+
+    form.addEventListener("submit", (e) => askQuestion(e));
+
+    voiceButton.addEventListener("click", () => {
+        if (!('webkitSpeechRecognition' in window)) {
+            alert("Speech recognition not supported in this browser.");
+            return;
+        }
+
+        const recognition = new webkitSpeechRecognition(); // Chrome only
+        recognition.lang = 'en-US';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        recognition.onstart = () => {
+            voiceButton.textContent = "Listening...";
+            voiceButton.disabled = true;
+        };
+
+        recognition.onend = () => {
+            voiceButton.textContent = "🎤 Speak your question";
+            voiceButton.disabled = false;
+        };
+
+        recognition.onerror = (event) => {
+            console.error("Speech error", event.error);
+            voiceButton.textContent = "🎤 Speak your question";
+            voiceButton.disabled = false;
+        };
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            chatfield.value = transcript;
+            form.requestSubmit(); // Properly triggers the form submit
+        };
+
+        recognition.start();
+    });
+
     console.log("Button event attached");
 });
 
 async function askQuestion(e) {
     e.preventDefault();
-    const chatfield = document.getElementById("chatfield");
     const resultdiv = document.getElementById("resultdiv");
+    const chatfield = document.getElementById("chatfield");
     const formButton = document.getElementById("formButton");
 
     resultdiv.textContent = "";
