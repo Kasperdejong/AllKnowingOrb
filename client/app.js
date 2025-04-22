@@ -72,11 +72,12 @@ async function askQuestion(e) {
     voiceButton.disabled = true;
     formButton.textContent = "You will now wait until I'm done speaking!";
 
+
     try {
         const response = await fetch("http://localhost:3000/", {
             method: 'POST',
             mode: 'cors',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json'},
             body: JSON.stringify({ prompt: chatfield.value })
         });
 
